@@ -160,6 +160,11 @@ class KlikandpayFrontController extends BaseFrontController
         if($order === null)
             throw new \Exception("We are unable to retrieve your order.");
 
+        // Set order status as CANCEL
+        $event = new OrderEvent($order);
+        $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_CANCELED)->getId());
+        $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
+
         return $this->render(
             self::ORDER_FAILED,
             array('failed_order_id' => $order->getId())
