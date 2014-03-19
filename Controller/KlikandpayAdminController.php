@@ -54,7 +54,7 @@ class KlikandpayAdminController extends BaseAdminController
             'klikandpay_montant_max'        => ConfigQuery::read('klikandpay_montant_max'),
             'klikandpay_retourvok'          => ConfigQuery::read('klikandpay_retourvok', '/%order_hash%'),
             'klikandpay_retourvhs'          => ConfigQuery::read('klikandpay_retourvhs', '/%order_hash%'),
-            'klikandpay_url_confirmation'   => ConfigQuery::read('klikandpay_url_confirmation', ConfigQuery::read('url_site') ? rtrim(ConfigQuery::read('url_site'), '/') : 'http://www.domain.com' . '/klikandpay/confirmation')
+            'klikandpay_url_confirmation'   => ConfigQuery::read('klikandpay_url_confirmation', ConfigQuery::read('url_site') ? rtrim(ConfigQuery::read('url_site'), '/') . '/klikandpay/confirmation' : 'http://www.domain.com/klikandpay/confirmation')
         ));
 
         $this->getParserContext()->addForm($klikandpayConfigForm);
