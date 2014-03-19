@@ -50,7 +50,7 @@ has been set and that the file exists on your site. Make sure you have checked t
 CHANGELOG
 ---------
 
-- ** 1.0.0 ** ( 19/03/2014 ) - First version of the plugin
+- ** 1.0.0 ** ( 19/03/2014 ) - First version of the module
 
 
 @ TODO
