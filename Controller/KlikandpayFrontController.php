@@ -189,23 +189,27 @@ class KlikandpayFrontController extends BaseFrontController
             // Retrieve the order
             $order = $this->findOrder($commande);
 
-            // Hash
+            // Hash (Total without shipping)
             $klikandpay = new Klikandpay();
-            $parameters = $klikandpay->getParameters($montantxkp, $order->getCustomer());
+            $parameters = $klikandpay->getParameters($montantxkp - $order->getPostage(), $order->getCustomer());
             $hash = $klikandpay->getHash($parameters, $order->getRef());
 
             // Verify if we can trust the transaction
-            if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId() || $hash !== $commande)
-                throw new \Exception("This order has already been paid or there is a problem with the hash : " . $order);
+            if($hash !== $commande)
+                throw new \Exception("The secure hash does not match: " . $hash . " <> " . $commande);
+
+            // Verify if we can trust the transaction
+            if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId())
+                throw new \Exception("This order was already been paid: " . $order->getStatusId());
 
             // Set order status as PAID
             $event = new OrderEvent($order);
             $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_PAID)->getId());
-            $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
+            //$this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
             // Save Transaction number from Klik & Pay
             $order->setTransactionRef($numxkp);
-            $order->save();
+            //$order->save();
 
             // Save all the return values from Klikandpay
             $event = new KlikandpayReturnEvent(
@@ -213,12 +217,12 @@ class KlikandpayFrontController extends BaseFrontController
                 $this->getRequest()->get('IPXKP'),
                 $montantxkp,
                 $numxkp,
-                $this->getRequest()->get('order_id'),
+                $order->getId(),
                 $this->getRequest()->get('PAIEMENT'),
                 $this->getRequest()->get('PAYSBXKP'),
                 $this->getRequest()->get('PAYSRXKP'),
                 $this->getRequest()->get('SCOREXKP'),
-                $this->getRequest()->get('transaction')
+                $commande
             );
             $this->dispatch('action.createKlikandpayReturn', $event);
 
