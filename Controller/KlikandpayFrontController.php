@@ -26,6 +26,7 @@ namespace Klikandpay\Controller;
 use Klikandpay\Event\KlikandpayReturnEvent;
 use Klikandpay\Klikandpay;
 use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Core\Event\Cart\CartEvent;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
@@ -186,7 +187,7 @@ class KlikandpayFrontController extends BaseFrontController
                 throw new \Exception('Error with return parameters from Klik & Pay.');
 
             // Retrieve the order
-            $order = $this->findOrder($hash);
+            $order = $this->findOrder($commande);
 
             // Hash
             $klikandpay = new Klikandpay();
@@ -222,8 +223,14 @@ class KlikandpayFrontController extends BaseFrontController
             $this->dispatch('action.createKlikandpayReturn', $event);
 
         } catch (\Exception $e) {
-            // Log error
-            Tlog::getInstance()->error(sprintf('Klik&Pay confirmation page => URL: %s <> message: %s', $this->getRequest()->getUri() , $e->getMessage()));
+            // Configure LOG for Klikandpay
+            $log = Tlog::getInstance();
+            $log->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationFile");
+            $log->setConfig("\\Thelia\\Log\\Destination\\TlogDestinationFile", 0, THELIA_ROOT."log".DS."log-klikandpay.txt");
+            $log->error(sprintf('Klik&Pay confirmation page => URL: %s <> message: %s', $this->getRequest()->getUri() , $e->getMessage()));
+
+            // Get log back to previous state
+            $log->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationRotatingFile");
         }
 
         // We don't need to render the view
