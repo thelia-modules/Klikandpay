@@ -205,11 +205,11 @@ class KlikandpayFrontController extends BaseFrontController
             // Set order status as PAID
             $event = new OrderEvent($order);
             $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_PAID)->getId());
-            //$this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
+            $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
             // Save Transaction number from Klik & Pay
             $order->setTransactionRef($numxkp);
-            //$order->save();
+            $order->save();
 
             // Save all the return values from Klikandpay
             $event = new KlikandpayReturnEvent(
