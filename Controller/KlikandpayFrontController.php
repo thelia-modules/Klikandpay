@@ -25,6 +25,7 @@ namespace Klikandpay\Controller;
 
 use Klikandpay\Event\KlikandpayReturnEvent;
 use Klikandpay\Klikandpay;
+use Klikandpay\Model\Base\KlikandpayReturnQuery;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Cart\CartEvent;
 use Thelia\Core\Event\Order\OrderEvent;
@@ -113,6 +114,14 @@ class KlikandpayFrontController extends BaseFrontController
         {
             if(strpos(ConfigQuery::read('klikandpay_retourvok'), $type) !== FALSE)
             {
+                // If order has been Paid, HASH was removed from the order table so we use the order id instead
+                if($type === '%order_hash%')
+                {
+                    /** var \Thelia\Model\KlikandpayReturn $return **/
+                    $return = KlikandpayReturnQuery::create()->filterByTransaction($hash)->findOne();
+                    $hash = $return->getOrderId();
+                    $type = '%order_id%';
+                }
                 $order = $this->findOrder($hash, $type);
                 break; // will leave the foreach loop and also "break" the if statement
             }
