@@ -27,7 +27,7 @@
     </route>
 
     <!-- Klik & Pay Confirmation -->
-    <route id="klikandpay.confirmation" path="/klikandpay/confirmation/{hash}" methods="get">
+    <route id="klikandpay.confirmation" path="/klikandpay/confirmation/" methods="get">
         <default key="_controller">Klikandpay\Controller\KlikandpayFrontController::confirmAction</default>
     </route>
 

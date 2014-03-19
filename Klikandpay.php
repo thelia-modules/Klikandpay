@@ -30,6 +30,7 @@ use Thelia\Install\Database;
 use Thelia\Model\ConfigQuery;
 use Thelia\Module\BaseModule;
 use Thelia\Module\PaymentModuleInterface;
+use Thelia\Model\ModuleImageQuery;
 use Thelia\Tools\Redirect;
 use Thelia\Tools\URL;
 
@@ -60,6 +61,12 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
         // Tables creation for the module
         $database = new Database($con->getWrappedConnection());
         $database->insertSql(null, array(__DIR__ . '/Config/klikandpay.sql'));
+
+        /* insert the images from image folder if first module activation */
+        $module = $this->getModuleModel();
+        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
+            $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
+        }
 
         // Key used to secure the transaction
         if(null === ConfigQuery::read(self::KEY))

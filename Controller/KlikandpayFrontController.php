@@ -121,6 +121,10 @@ class KlikandpayFrontController extends BaseFrontController
             throw new \Exception("We are unable to retrieve your order.");
         }
 
+        // Empty cart
+        $cart_event = new CartEvent($this->getSession()->getCart());
+        $this->dispatch(TheliaEvents::CART_CLEAR, $cart_event);
+
         return $this->render(
             self::ORDER_PLACED,
             array('placed_order_id' => $order->getId())
@@ -167,14 +171,12 @@ class KlikandpayFrontController extends BaseFrontController
      * is accepted and if the marchant has configured a dynamic url
      * in the Klik & Pay's backoffice
      *
-     * @param  string $hash hash to retrieve order
-     *
      * @return none
      */
-    public function confirmAction($hash)
+    public function confirmAction()
     {
         try {
-            //$commande = $this->getRequest()->get('commande');
+            $commande = $this->getRequest()->get('commande');
             $numxkp = $this->getRequest()->get('NUMXKP');
             $response = $this->getRequest()->get('RESPONSE');
             $montantxkp = $this->getRequest()->get('MONTANTXKP');
@@ -186,13 +188,13 @@ class KlikandpayFrontController extends BaseFrontController
             // Retrieve the order
             $order = $this->findOrder($hash);
 
-            // New Hash
+            // Hash
             $klikandpay = new Klikandpay();
             $parameters = $klikandpay->getParameters($montantxkp, $order->getCustomer());
-            $newhash = $klikandpay->getHash($parameters, $order->getRef());
+            $hash = $klikandpay->getHash($parameters, $order->getRef());
 
             // Verify if we can trust the transaction
-            if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId() || $newhash !== $hash)
+            if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId() || $hash !== $commande)
                 throw new \Exception("This order has already been paid or there is a problem with the hash : " . $order);
 
             // Set order status as PAID
