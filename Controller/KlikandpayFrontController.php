@@ -119,8 +119,11 @@ class KlikandpayFrontController extends BaseFrontController
                 {
                     /** var \Thelia\Model\KlikandpayReturn $return **/
                     $return = KlikandpayReturnQuery::create()->filterByTransaction($hash)->findOne();
-                    $hash = $return->getOrderId();
-                    $type = '%order_id%';
+                    if ($return)
+                    {
+                        $hash = $return->getOrderId();
+                        $type = '%order_id%';
+                    }
                 }
                 $order = $this->findOrder($hash, $type);
                 break; // will leave the foreach loop and also "break" the if statement
