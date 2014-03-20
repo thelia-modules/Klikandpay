@@ -201,10 +201,11 @@ class KlikandpayFrontController extends BaseFrontController
     public function confirmAction()
     {
         try {
-            $commande = $this->getRequest()->get('commande');
-            $numxkp = $this->getRequest()->get('NUMXKP');
-            $response = $this->getRequest()->get('RESPONSE');
-            $montantxkp = $this->getRequest()->get('MONTANTXKP');
+            // GET
+            $commande = $this->getRequest()->query->get('commande');
+            $numxkp = $this->getRequest()->query->get('NUMXKP');
+            $response = $this->getRequest()->query->get('RESPONSE');
+            $montantxkp = $this->getRequest()->query->get('MONTANTXKP');
 
             // Klik&Pay Transaction Number is mandatory and the response from Klik & Pay has to be equal to '00'
             if( empty($numxkp) || $response !== '00' )
@@ -243,15 +244,15 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Save all the return values from Klikandpay
             $event = new KlikandpayReturnEvent(
-                $this->getRequest()->get('DEVISEXKP'),
-                $this->getRequest()->get('IPXKP'),
+                $this->getRequest()->query->get('DEVISEXKP'),
+                $this->getRequest()->query->get('IPXKP'),
                 $montantxkp,
                 $numxkp,
                 $order->getId(),
-                $this->getRequest()->get('PAIEMENT'),
-                $this->getRequest()->get('PAYSBXKP'),
-                $this->getRequest()->get('PAYSRXKP'),
-                $this->getRequest()->get('SCOREXKP'),
+                $this->getRequest()->query->get('PAIEMENT'),
+                $this->getRequest()->query->get('PAYSBXKP'),
+                $this->getRequest()->query->get('PAYSRXKP'),
+                $this->getRequest()->query->get('SCOREXKP'),
                 $commande
             );
             $this->dispatch('action.createKlikandpayReturn', $event);

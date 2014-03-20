@@ -94,7 +94,7 @@ class KlikandpayAdminController extends BaseAdminController
 
             $this->adminLogAppend(AdminResources::MODULE, AccessManager::UPDATE, "Klik & Pay configuration changed");
 
-            if ($this->getRequest()->get('save_mode') == 'stay')
+            if ($this->getRequest()->request->get('save_mode') == 'stay')
             {
                 $this->redirectToRoute(
                     'admin.module.configure',
