@@ -64,7 +64,8 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
 
         /* insert the images from image folder if first module activation */
         $module = $this->getModuleModel();
-        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
+        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0)
+        {
             $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
         }
 
@@ -86,18 +87,24 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
     {
         // Security: missing account id
         if(0 === intval(ConfigQuery::read('klikandpay_identifiant')))
+        {
             return false;
+        }
 
         // Retrieve the total amount in the cart without shipping
         $total = $this->getCartTotal();
 
         // Minimum amount
         if(intval(ConfigQuery::read('klikandpay_montant_min')) > 0 && $total < ConfigQuery::read('klikandpay_montant_min'))
+        {
             return false;
+        }
 
         // Maximum amount
         if(intval(ConfigQuery::read('klikandpay_montant_max')) > 0 && $total > ConfigQuery::read('klikandpay_montant_max'))
+        {
             return false;
+        }
 
         // Return True if all conditions are respected
         return true;

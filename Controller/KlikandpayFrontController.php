@@ -62,7 +62,9 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Security : check current User
             if($order->getCustomerId() !== $this->getSession()->getCustomerUser()->getId())
+            {
                 throw new \Exception("Sorry, this order doesn't belong to you.");
+            }
 
             // Array of data to send
             $klikandpay = new Klikandpay();
@@ -72,12 +74,14 @@ class KlikandpayFrontController extends BaseFrontController
             $parameters['RETOUR'] = $hash;
 
             // Return URL (RETOURVOK : Variable used to complete the URL if the transaction is accepted)
-            if (ConfigQuery::read('klikandpay_retourvok') != "") {
+            if (ConfigQuery::read('klikandpay_retourvok') != "")
+            {
                 $parameters['RETOURVOK'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvok'), $order);
             }
 
             // Return URL (RETOURVHS : Variable used to complete the URL if the transaction is refused or cancelled)
-            if (ConfigQuery::read('klikandpay_retourvhs') != "") {
+            if (ConfigQuery::read('klikandpay_retourvhs') != "")
+            {
                 $parameters['RETOURVHS'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvhs'), $order);
             }
 
@@ -130,7 +134,8 @@ class KlikandpayFrontController extends BaseFrontController
             }
         }
 
-        if($order === null) {
+        if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
         }
 
@@ -170,7 +175,9 @@ class KlikandpayFrontController extends BaseFrontController
         }
 
         if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
+        }
 
         // Set order status as CANCEL
         $event = new OrderEvent($order);
@@ -201,7 +208,9 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Klik&Pay Transaction Number is mandatory and the response from Klik & Pay has to be equal to '00'
             if( empty($numxkp) || $response !== '00' )
+            {
                 throw new \Exception('Error with return parameters from Klik & Pay.');
+            }
 
             // Retrieve the order
             $order = $this->findOrder($commande);
@@ -213,11 +222,15 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Verify if we can trust the transaction
             if($hash !== $commande)
+            {
                 throw new \Exception("The secure hash does not match: " . $hash . " <> " . $commande);
+            }
 
             // Verify if we can trust the transaction
             if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId())
+            {
                 throw new \Exception("This order was already been paid: " . $order->getStatusId());
+            }
 
             // Set order status as PAID
             $event = new OrderEvent($order);
@@ -306,7 +319,8 @@ class KlikandpayFrontController extends BaseFrontController
                 break;
         }
 
-        if($order === null) {
+        if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
         }
 
