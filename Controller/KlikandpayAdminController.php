@@ -40,7 +40,7 @@ class KlikandpayAdminController extends BaseAdminController
 
     public function defaultAction()
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array(), AccessManager::VIEW))
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array('Klikandpay'), AccessManager::VIEW))
         {
             return $response;
         }
@@ -64,7 +64,7 @@ class KlikandpayAdminController extends BaseAdminController
 
     public function saveAction()
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array(), AccessManager::UPDATE))
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array('Klikandpay'), AccessManager::UPDATE))
         {
             return $response;
         }
