@@ -3,9 +3,12 @@ KLIKANDPAY PAYMENT FOR THELIA V2
 
 This module add the secure payment method [Klik & Pay][1] on your site.
 
-> **Author**
+> **THELIA**
 >
-> Christophe Laffont - OpenStudio / [www.openstudio.fr][2]
+> **Copyright** (c) [OpenStudio][2]                                             
+> **email** : info@thelia.net
+> **web** : http://www.thelia.net
+> **Author:** Christophe Laffont
 
 
 INSTALLATION
@@ -26,6 +29,19 @@ To install this module, you will need:
     > **Dynamic Return URL**: http://www.yourdomain.com/klikandpay/confirmation?commande=
     
     **Important:** If you use the dynamic return URL, it's also very important to checked the value **MONTANTXKP** (Transaction amount).
+
+
+INTEGRATION
+----------
+
+There are **3 samples pages** in the module that you can find in the folder `/local/modules/klikandpay/templates/frontOffice/default/` and you have to copy them into your theme if you are not using the default's theme. 
+
+ - **order-payment.html**: page used to send the order data to Klik & Pay's payment services..
+ - **order-placed.html**: Return page when your order is accepted.
+ - **order-failed.html**: Return page when your order is refused or canceled.
+
+**Notice:** These samples are just made to help you to integrate the module Klik & Pay in your project.
+
 
 ----------
 

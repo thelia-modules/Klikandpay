@@ -18,10 +18,9 @@
 {block name='no-return-functions' append}
   {$breadcrumbs = [
     ['title' => {intl l="Cart"}, 'url'=>{url path="/cart"}],
-    ['title' => {intl l="Secure Payment"}, 'url'=>{url path="/order/pay"}]
+    ['title' => {intl l="Secure Payment"}, 'url'=>{url path="/order/invoice"}]
   ]}
 {/block}
-
 
 {block name="main-content"}
 <div class="main">
@@ -43,7 +42,6 @@
       </div>
     </div>
   </article>
-
 </div>
 {/block}
 
