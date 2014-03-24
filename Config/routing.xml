@@ -12,11 +12,6 @@
         <default key="_controller">Klikandpay\Controller\KlikandpayAdminController::saveAction</default>
     </route>
 
-    <!-- Klik & Pay Payment -->
-    <route id="klikandpay.order.pay" path="/klikandpay/order/pay/{hash}" methods="get">
-        <default key="_controller">Klikandpay\Controller\KlikandpayFrontController::payAction</default>
-    </route>
-
     <!-- Klik & Pay Response -->
     <route id="klikandpay.order.placed" path="/klikandpay/order/placed/{hash}" methods="get">
         <default key="_controller">Klikandpay\Controller\KlikandpayFrontController::placedAction</default>

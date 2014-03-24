@@ -32,7 +32,6 @@ use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
 use Thelia\Model\ConfigQuery;
-use Thelia\Model\Order;
 use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatus;
 use Thelia\Model\OrderStatusQuery;
@@ -47,56 +46,6 @@ class KlikandpayFrontController extends BaseFrontController
     const ORDER_PAY = 'order-payment';
     const ORDER_PLACED = 'order-placed';
     const ORDER_FAILED = 'order-failed';
-
-    /**
-     * Method used to send the data to Klik & Pay website
-     *
-     * @param  string $hash hash to retrieve order
-     *
-     * @return \Thelia\Core\HttpFoundation\Response
-     */
-    public function payAction($hash)
-    {
-        try {
-            $order = $this->findOrder($hash);
-
-            // Security : check current User
-            if($order->getCustomerId() !== $this->getSession()->getCustomerUser()->getId())
-            {
-                throw new \Exception("Sorry, this order doesn't belong to you.");
-            }
-
-            // Array of data to send
-            $klikandpay = new Klikandpay();
-            $parameters = $klikandpay->getParameters($order->getTotalAmount(), $order->getCustomer());
-
-            // Send secured hash to Klik & Pay
-            $parameters['RETOUR'] = $hash;
-
-            // Return URL (RETOURVOK : Variable used to complete the URL if the transaction is accepted)
-            if (ConfigQuery::read('klikandpay_retourvok') != "")
-            {
-                $parameters['RETOURVOK'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvok'), $order);
-            }
-
-            // Return URL (RETOURVHS : Variable used to complete the URL if the transaction is refused or cancelled)
-            if (ConfigQuery::read('klikandpay_retourvhs') != "")
-            {
-                $parameters['RETOURVHS'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvhs'), $order);
-            }
-
-            // Multilingual website
-            $parameters['L'] = $this->getSession()->getLang()->getCode();
-
-            return $this->render(
-                self::ORDER_PAY,
-                array('fields' => $parameters, 'action' => $klikandpay->getAction())
-            );
-
-        } catch (\Exception $e) {
-            return $this->render(self::ORDER_FAILED);
-        }
-    }
 
 
     /**
@@ -270,26 +219,6 @@ class KlikandpayFrontController extends BaseFrontController
 
         // We don't need to render the view
         die();
-    }
-
-
-    /**
-     * Method used to replace some elements in the url
-     *
-     * @param  string $variable
-     * @param  \Thelia\Model\Order $order processed order
-     *
-     * @return string Return's URL with the real values
-     */
-    function returnURL($variable, Order $order)
-    {
-        $variable = strtolower($variable);
-
-        $variable = str_replace('%order_id%', $order->getId(), $variable);
-        $variable = str_replace('%order_ref%', $order->getRef(), $variable);
-        $variable = str_replace('%order_hash%', $order->getTransactionRef(), $variable);
-
-        return $variable;
     }
 
 

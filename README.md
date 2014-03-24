@@ -34,13 +34,13 @@ To install this module, you will need:
 INTEGRATION
 ----------
 
-There are **3 samples pages** in the module that you can find in the folder `/local/modules/klikandpay/templates/frontOffice/default/` and you have to copy them into your theme if you are not using the default's theme. 
+There are **3 samples pages** in the module that you can find in the folder `/local/modules/klikandpay/templates/frontOffice/default/` and you have to copy them into your theme if you are not using the default's theme.
 
- - **order-payment.html**: page used to send the order data to Klik & Pay's payment services..
+ - **order-payment.html**: page used to send the order data to Klik & Pay's payment services.
  - **order-placed.html**: Return page when your order is accepted.
  - **order-failed.html**: Return page when your order is refused or canceled.
 
-**Notice:** These samples are just made to help you to integrate the module Klik & Pay in your project.
+**Notice:** These samples are just made to help you to integrate the module Klik & Pay in your project and you might have them already into your theme for an other module of payment.
 
 
 ----------
