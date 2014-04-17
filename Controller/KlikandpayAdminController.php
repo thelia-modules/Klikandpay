@@ -38,11 +38,12 @@ use Thelia\Model\ConfigQuery;
 class KlikandpayAdminController extends BaseAdminController
 {
 
-
-
     public function defaultAction()
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array(), AccessManager::VIEW)) return $response;
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array('Klikandpay'), AccessManager::VIEW))
+        {
+            return $response;
+        }
 
         // Hydrate the klikandpay configuration form
         $klikandpayConfigForm = new ConfigKlikandpayForm($this->getRequest(), 'form', array(
@@ -53,8 +54,7 @@ class KlikandpayAdminController extends BaseAdminController
             'klikandpay_montant_min'        => ConfigQuery::read('klikandpay_montant_min', 0),
             'klikandpay_montant_max'        => ConfigQuery::read('klikandpay_montant_max'),
             'klikandpay_retourvok'          => ConfigQuery::read('klikandpay_retourvok', '/%order_hash%'),
-            'klikandpay_retourvhs'          => ConfigQuery::read('klikandpay_retourvhs', '/%order_hash%'),
-            'klikandpay_url_confirmation'   => ConfigQuery::read('klikandpay_url_confirmation', ConfigQuery::read('url_site') ? rtrim(ConfigQuery::read('url_site'), '/') . '/klikandpay/confirmation?commande=' : 'http://www.domain.com/klikandpay/confirmation?commande=')
+            'klikandpay_retourvhs'          => ConfigQuery::read('klikandpay_retourvhs', '/%order_hash%')
         ));
 
         $this->getParserContext()->addForm($klikandpayConfigForm);
@@ -64,7 +64,10 @@ class KlikandpayAdminController extends BaseAdminController
 
     public function saveAction()
     {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array(), AccessManager::UPDATE)) return $response;
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, array('Klikandpay'), AccessManager::UPDATE))
+        {
+            return $response;
+        }
 
         $error_msg = false;
 
@@ -80,7 +83,9 @@ class KlikandpayAdminController extends BaseAdminController
                 if(! in_array($name , array('success_url', 'error_message')))
                 {
                     if(in_array($name , array('klikandpay_montant_min', 'klikandpay_montant_max')))
+                    {
                         $value = $this->getFloat($value);
+                    }
 
                     // Save
                     ConfigQuery::write($name, $value, false);
@@ -89,7 +94,8 @@ class KlikandpayAdminController extends BaseAdminController
 
             $this->adminLogAppend(AdminResources::MODULE, AccessManager::UPDATE, "Klik & Pay configuration changed");
 
-            if ($this->getRequest()->get('save_mode') == 'stay') {
+            if ($this->getRequest()->request->get('save_mode') == 'stay')
+            {
                 $this->redirectToRoute(
                     'admin.module.configure',
                     array(),
@@ -120,42 +126,56 @@ class KlikandpayAdminController extends BaseAdminController
     private function getFloat($ptString)
     {
         if (strlen($ptString) == 0)
+        {
             return false;
+        }
 
         $pString = str_replace(" ", "", $ptString);
 
         if (substr_count($pString, ",") > 1)
+        {
             $pString = str_replace(",", "", $pString);
+        }
 
         if (substr_count($pString, ".") > 1)
+        {
             $pString = str_replace(".", "", $pString);
+        }
 
         $commaset = strpos($pString,',');
-        if ($commaset === false) {$commaset = -1;}
+        if ($commaset === false)
+        {
+            $commaset = -1;
+        }
 
         $pointset = strpos($pString,'.');
-        if ($pointset === false) {$pointset = -1;}
+        if ($pointset === false)
+        {
+            $pointset = -1;
+        }
 
         $pregResultA = array();
         $pregResultB = array();
 
-        if ($pointset < $commaset) {
+        if ($pointset < $commaset)
+        {
             preg_match('#(([-]?[0-9]+(\.[0-9])?)+(,[0-9]+)?)#', $pString, $pregResultA);
         } else {
             preg_match('#(([-]?[0-9]+(,[0-9])?)+(\.[0-9]+)?)#', $pString, $pregResultB);
         }
-        if ((isset($pregResultA[0]) && (!isset($pregResultB[0])
-                || !$pointset))) {
+        if ((isset($pregResultA[0]) && (!isset($pregResultB[0]) || !$pointset)))
+        {
             $numberString = $pregResultA[0];
             $numberString = str_replace('.','',$numberString);
             $numberString = str_replace(',','.',$numberString);
         }
-        elseif (isset($pregResultB[0]) && (!isset($pregResultA[0])
-                || !$commaset)) {
+        elseif (isset($pregResultB[0]) && (!isset($pregResultA[0]) || !$commaset))
+        {
             $numberString = $pregResultB[0];
             $numberString = str_replace(',','',$numberString);
         }
-        else {
+        else
+        {
             return false;
         }
 

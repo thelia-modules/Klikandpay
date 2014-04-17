@@ -12,10 +12,9 @@
 {block name='no-return-functions' append}
     {$breadcrumbs = [
         ['title' => {intl l="Cart"}, 'url'=>{url path="/cart"}],
-        ['title' => {intl l="Secure Payment"}, 'url'=>{url path="/order/pay"}]
+        ['title' => {intl l="Secure Payment"}, 'url'=>{url path="/order/invoice"}]
     ]}
 {/block}
-
 
 {block name="main-content"}
     <div class="main">
@@ -26,7 +25,6 @@
             {include file="misc/checkout-progress.tpl" step="last"}
 
             {loop type="order" name="placed-order" id=$placed_order_id}
-
             <div id="payment-success" class="panel">
                 <div class="panel-heading">
                     <h3 class="panel-title">{intl l="You choose to pay by"} : <span class="payment-method">{loop name="payment-module" type="module" id=$PAYMENT_MODULE}{$TITLE}{/loop}</span></h3>
@@ -46,12 +44,10 @@
                     </dl>
                 </div>
             </div>
-
             {/loop}
 
             <a href="{navigate to="index"}" role="button" class="btn btn-checkout-home"><span>{intl l="Go home"}</span></a>
 
         </article>
-
     </div>
 {/block}
