@@ -23,16 +23,19 @@
 
 namespace Klikandpay;
 
+use Klikandpay\Controller\KlikandpayFrontController;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Thelia\Core\HttpFoundation\Response;
+use Thelia\Core\Template\TemplateHelper;
 use Thelia\Model\Customer;
 use Thelia\Model\Order;
 use Thelia\Install\Database;
 use Thelia\Model\ConfigQuery;
+use Thelia\Module\AbstractPaymentModule;
 use Thelia\Module\BaseModule;
 use Thelia\Module\PaymentModuleInterface;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Tools\Redirect;
-use Thelia\Tools\URL;
 
 
 /**
@@ -41,7 +44,7 @@ use Thelia\Tools\URL;
  * @package Klikandpay
  * @author Thelia <info@thelia.net>
  */
-class Klikandpay extends BaseModule implements PaymentModuleInterface
+class Klikandpay extends AbstractPaymentModule
 {
 
     const MODE_TEST = 0;
@@ -64,7 +67,8 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
 
         /* insert the images from image folder if first module activation */
         $module = $this->getModuleModel();
-        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
+        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0)
+        {
             $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
         }
 
@@ -86,18 +90,24 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
     {
         // Security: missing account id
         if(0 === intval(ConfigQuery::read('klikandpay_identifiant')))
+        {
             return false;
+        }
 
         // Retrieve the total amount in the cart without shipping
         $total = $this->getCartTotal();
 
         // Minimum amount
         if(intval(ConfigQuery::read('klikandpay_montant_min')) > 0 && $total < ConfigQuery::read('klikandpay_montant_min'))
+        {
             return false;
+        }
 
         // Maximum amount
         if(intval(ConfigQuery::read('klikandpay_montant_max')) > 0 && $total > ConfigQuery::read('klikandpay_montant_max'))
+        {
             return false;
+        }
 
         // Return True if all conditions are respected
         return true;
@@ -118,16 +128,62 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
      */
     public function pay(Order $order)
     {
-        // Array of data to send
-        $parameters = $this->getParameters($order->getTotalAmount(), $order->getCustomer());
+        try {
 
-        // Hash to secure the transaction
-        $hash = $this->getHash($parameters, $order->getRef());
-        $order->setTransactionRef($hash);
-        $order->save();
+            // Array of data to send
+            $parameters = $this->getParameters($order->getTotalAmount(), $order->getCustomer());
 
-        // Redirect to a new page to avoid multiple orders if the user refresh the page
-        $this->redirect(URL::getInstance()->absoluteUrl("/klikandpay/order/pay/$hash"));
+            // Hash to secure the transaction
+            $hash = $this->getHash($parameters, $order->getRef());
+            $order->setTransactionRef($hash);
+            $order->save();
+
+            // Send secured hash to Klik & Pay
+            $parameters['RETOUR'] = $hash;
+
+            // Return URL (RETOURVOK : Variable used to complete the URL if the transaction is accepted)
+            if (ConfigQuery::read('klikandpay_retourvok') != "")
+            {
+                $parameters['RETOURVOK'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvok'), $order);
+            }
+
+            // Return URL (RETOURVHS : Variable used to complete the URL if the transaction is refused or cancelled)
+            if (ConfigQuery::read('klikandpay_retourvhs') != "")
+            {
+                $parameters['RETOURVHS'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvhs'), $order);
+            }
+
+            // Multilingual website
+            $parameters['L'] = $this->getRequest()->getSession()->getLang()->getCode();
+
+            return $this->render(
+                KlikandpayFrontController::ORDER_PAY,
+                array('fields' => $parameters, 'action' => $this->getAction())
+            );
+
+        } catch (\Exception $e) {
+            return $this->render(KlikandpayFrontController::ORDER_FAILED);
+        }
+    }
+
+
+    /**
+     * Method used to replace some elements in the url
+     *
+     * @param  string $variable
+     * @param  \Thelia\Model\Order $order processed order
+     *
+     * @return string Return's URL with the real values
+     */
+    function returnURL($variable, Order $order)
+    {
+        $variable = strtolower($variable);
+
+        $variable = str_replace('%order_id%', $order->getId(), $variable);
+        $variable = str_replace('%order_ref%', $order->getRef(), $variable);
+        $variable = str_replace('%order_hash%', $order->getTransactionRef(), $variable);
+
+        return $variable;
     }
 
 
@@ -231,6 +287,67 @@ class Klikandpay extends BaseModule implements PaymentModuleInterface
     {
         return $this->container->get('request');
     }
+
+
+    /**
+     * @return ParserInterface instance parser
+     */
+    protected function getParser($template = null)
+    {
+        $parser = $this->container->get("thelia.parser");
+
+        // Define the template that should be used
+        $parser->setTemplateDefinition($template ?: TemplateHelper::getInstance()->getActiveFrontTemplate());
+
+        return $parser;
+    }
+
+
+    /**
+     * Render the given template, and returns the result as an Http Response.
+     *
+     * @param $templateName the complete template name, with extension
+     * @param  array                                $args   the template arguments
+     * @param  int                                  $status http code status
+     * @return \Thelia\Core\HttpFoundation\Response
+     */
+    protected function render($templateName, $args = array(), $status = 200)
+    {
+        return Response::create($this->renderRaw($templateName, $args), $status);
+    }
+
+
+    /**
+     * Render the given template, and returns the result as a string.
+     *
+     * @param $templateName the complete template name, with extension
+     * @param array $args        the template arguments
+     * @param null  $templateDir
+     *
+     * @return string
+     */
+    protected function renderRaw($templateName, $args = array(), $templateDir = null)
+    {
+
+        // Add the template standard extension
+        $templateName .= '.html';
+
+        $session = $this->getRequest()->getSession();
+
+        // Prepare common template variables
+        $args = array_merge($args, array(
+                'locale'               => $session->getLang()->getLocale(),
+                'lang_code'            => $session->getLang()->getCode(),
+                'lang_id'              => $session->getLang()->getId(),
+                'current_url'          => $this->getRequest()->getUri()
+            ));
+
+        // Render the template.
+        $data = $this->getParser($templateDir)->render($templateName, $args);
+
+        return $data;
+    }
+
 
     /**
      * Redirect request to the specified url

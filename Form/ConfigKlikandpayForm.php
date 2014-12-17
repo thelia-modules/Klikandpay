@@ -140,16 +140,6 @@ class ConfigKlikandpayForm extends BaseForm {
                     ),
                     'required' => false,
                 ))
-            ->add('klikandpay_url_confirmation', 'url', array(
-                    'constraints' => array(
-                        new Constraints\NotBlank(),
-                        new Constraints\Url()
-                    ),
-                    'label' => Translator::getInstance()->trans('Return URL'),
-                    'label_attr' => array(
-                        'for' => 'klikandpay_url_confirmation'
-                    )
-                ))
         ;
     }
 

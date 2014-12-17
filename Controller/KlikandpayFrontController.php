@@ -32,7 +32,6 @@ use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
 use Thelia\Model\ConfigQuery;
-use Thelia\Model\Order;
 use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatus;
 use Thelia\Model\OrderStatusQuery;
@@ -47,52 +46,6 @@ class KlikandpayFrontController extends BaseFrontController
     const ORDER_PAY = 'order-payment';
     const ORDER_PLACED = 'order-placed';
     const ORDER_FAILED = 'order-failed';
-
-    /**
-     * Method used to send the data to Klik & Pay website
-     *
-     * @param  string $hash hash to retrieve order
-     *
-     * @return \Thelia\Core\HttpFoundation\Response
-     */
-    public function payAction($hash)
-    {
-        try {
-            $order = $this->findOrder($hash);
-
-            // Security : check current User
-            if($order->getCustomerId() !== $this->getSession()->getCustomerUser()->getId())
-                throw new \Exception("Sorry, this order doesn't belong to you.");
-
-            // Array of data to send
-            $klikandpay = new Klikandpay();
-            $parameters = $klikandpay->getParameters($order->getTotalAmount(), $order->getCustomer());
-
-            // Send secured hash to Klik & Pay
-            $parameters['RETOUR'] = $hash;
-
-            // Return URL (RETOURVOK : Variable used to complete the URL if the transaction is accepted)
-            if (ConfigQuery::read('klikandpay_retourvok') != "") {
-                $parameters['RETOURVOK'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvok'), $order);
-            }
-
-            // Return URL (RETOURVHS : Variable used to complete the URL if the transaction is refused or cancelled)
-            if (ConfigQuery::read('klikandpay_retourvhs') != "") {
-                $parameters['RETOURVHS'] = $this->returnURL(ConfigQuery::read('klikandpay_retourvhs'), $order);
-            }
-
-            // Multilingual website
-            $parameters['L'] = $this->getSession()->getLang()->getCode();
-
-            return $this->render(
-                self::ORDER_PAY,
-                array('fields' => $parameters, 'action' => $klikandpay->getAction())
-            );
-
-        } catch (\Exception $e) {
-            return $this->render(self::ORDER_FAILED);
-        }
-    }
 
 
     /**
@@ -130,7 +83,8 @@ class KlikandpayFrontController extends BaseFrontController
             }
         }
 
-        if($order === null) {
+        if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
         }
 
@@ -170,7 +124,9 @@ class KlikandpayFrontController extends BaseFrontController
         }
 
         if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
+        }
 
         // Set order status as CANCEL
         $event = new OrderEvent($order);
@@ -194,14 +150,17 @@ class KlikandpayFrontController extends BaseFrontController
     public function confirmAction()
     {
         try {
-            $commande = $this->getRequest()->get('commande');
-            $numxkp = $this->getRequest()->get('NUMXKP');
-            $response = $this->getRequest()->get('RESPONSE');
-            $montantxkp = $this->getRequest()->get('MONTANTXKP');
+            // GET
+            $commande = $this->getRequest()->query->get('commande');
+            $numxkp = $this->getRequest()->query->get('NUMXKP');
+            $response = $this->getRequest()->query->get('RESPONSE');
+            $montantxkp = $this->getRequest()->query->get('MONTANTXKP');
 
             // Klik&Pay Transaction Number is mandatory and the response from Klik & Pay has to be equal to '00'
             if( empty($numxkp) || $response !== '00' )
+            {
                 throw new \Exception('Error with return parameters from Klik & Pay.');
+            }
 
             // Retrieve the order
             $order = $this->findOrder($commande);
@@ -213,11 +172,15 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Verify if we can trust the transaction
             if($hash !== $commande)
+            {
                 throw new \Exception("The secure hash does not match: " . $hash . " <> " . $commande);
+            }
 
             // Verify if we can trust the transaction
             if($order->getStatusId() !== OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_NOT_PAID)->getId())
+            {
                 throw new \Exception("This order was already been paid: " . $order->getStatusId());
+            }
 
             // Set order status as PAID
             $event = new OrderEvent($order);
@@ -230,15 +193,15 @@ class KlikandpayFrontController extends BaseFrontController
 
             // Save all the return values from Klikandpay
             $event = new KlikandpayReturnEvent(
-                $this->getRequest()->get('DEVISEXKP'),
-                $this->getRequest()->get('IPXKP'),
+                $this->getRequest()->query->get('DEVISEXKP'),
+                $this->getRequest()->query->get('IPXKP'),
                 $montantxkp,
                 $numxkp,
                 $order->getId(),
-                $this->getRequest()->get('PAIEMENT'),
-                $this->getRequest()->get('PAYSBXKP'),
-                $this->getRequest()->get('PAYSRXKP'),
-                $this->getRequest()->get('SCOREXKP'),
+                $this->getRequest()->query->get('PAIEMENT'),
+                $this->getRequest()->query->get('PAYSBXKP'),
+                $this->getRequest()->query->get('PAYSRXKP'),
+                $this->getRequest()->query->get('SCOREXKP'),
                 $commande
             );
             $this->dispatch('action.createKlikandpayReturn', $event);
@@ -256,26 +219,6 @@ class KlikandpayFrontController extends BaseFrontController
 
         // We don't need to render the view
         die();
-    }
-
-
-    /**
-     * Method used to replace some elements in the url
-     *
-     * @param  string $variable
-     * @param  \Thelia\Model\Order $order processed order
-     *
-     * @return string Return's URL with the real values
-     */
-    function returnURL($variable, Order $order)
-    {
-        $variable = strtolower($variable);
-
-        $variable = str_replace('%order_id%', $order->getId(), $variable);
-        $variable = str_replace('%order_ref%', $order->getRef(), $variable);
-        $variable = str_replace('%order_hash%', $order->getTransactionRef(), $variable);
-
-        return $variable;
     }
 
 
@@ -306,7 +249,8 @@ class KlikandpayFrontController extends BaseFrontController
                 break;
         }
 
-        if($order === null) {
+        if($order === null)
+        {
             throw new \Exception("We are unable to retrieve your order.");
         }
 
