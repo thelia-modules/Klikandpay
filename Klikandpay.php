@@ -31,6 +31,7 @@ use Thelia\Model\Customer;
 use Thelia\Model\Order;
 use Thelia\Install\Database;
 use Thelia\Model\ConfigQuery;
+use Thelia\Module\AbstractPaymentModule;
 use Thelia\Module\BaseModule;
 use Thelia\Module\PaymentModuleInterface;
 use Thelia\Model\ModuleImageQuery;
@@ -43,7 +44,7 @@ use Thelia\Tools\Redirect;
  * @package Klikandpay
  * @author Thelia <info@thelia.net>
  */
-class Klikandpay extends BaseModule implements PaymentModuleInterface
+class Klikandpay extends AbstractPaymentModule
 {
 
     const MODE_TEST = 0;
