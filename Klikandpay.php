@@ -295,7 +295,14 @@ class Klikandpay extends AbstractPaymentModule
     protected function getParser($template = null)
     {
         $parser = $this->container->get("thelia.parser");
-        $activeFrontTemplate = (new TheliaTemplateHelper)->getActiveFrontTemplate();
+        
+        //FIX for 2.3
+        if (class_exists('TemplateHelper')) {
+            $activeFrontTemplate = TemplateHelper::getInstance()->getActiveFrontTemplate();
+        } else {
+            $activeFrontTemplate = (new TheliaTemplateHelper)->getActiveFrontTemplate();
+        }
+        
         // Define the template that should be used
         $parser->setTemplateDefinition($template ?: $activeFrontTemplate);
 
