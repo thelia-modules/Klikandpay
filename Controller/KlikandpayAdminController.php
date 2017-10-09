@@ -96,7 +96,7 @@ class KlikandpayAdminController extends BaseAdminController
 
             if ($this->getRequest()->request->get('save_mode') == 'stay')
             {
-                $this->redirectToRoute(
+                $this->generateRedirectFromRoute(
                     'admin.module.configure',
                     array(),
                     array (
