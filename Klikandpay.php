@@ -36,7 +36,7 @@ use Thelia\Module\BaseModule;
 use Thelia\Module\PaymentModuleInterface;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Tools\Redirect;
-
+use Thelia\Core\Template\TheliaTemplateHelper;
 
 /**
  * Class Klikandpay
@@ -295,9 +295,16 @@ class Klikandpay extends AbstractPaymentModule
     protected function getParser($template = null)
     {
         $parser = $this->container->get("thelia.parser");
-
+        
+        //FIX for 2.3
+        if (class_exists('TemplateHelper')) {
+            $activeFrontTemplate = TemplateHelper::getInstance()->getActiveFrontTemplate();
+        } else {
+            $activeFrontTemplate = (new TheliaTemplateHelper)->getActiveFrontTemplate();
+        }
+        
         // Define the template that should be used
-        $parser->setTemplateDefinition($template ?: TemplateHelper::getInstance()->getActiveFrontTemplate());
+        $parser->setTemplateDefinition($template ?: $activeFrontTemplate);
 
         return $parser;
     }
