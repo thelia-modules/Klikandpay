@@ -26,7 +26,8 @@ namespace Klikandpay;
 use Klikandpay\Controller\KlikandpayFrontController;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Thelia\Core\HttpFoundation\Response;
-use Thelia\Core\Template\TemplateHelper;
+use Thelia\Core\Template\ParserInterface;
+use Thelia\Core\Template\TheliaTemplateHelper;
 use Thelia\Model\Customer;
 use Thelia\Model\Order;
 use Thelia\Install\Database;
@@ -294,17 +295,14 @@ class Klikandpay extends AbstractPaymentModule
      */
     protected function getParser($template = null)
     {
+        /** @var ParserInterface $parser */
         $parser = $this->container->get("thelia.parser");
-        
-        //FIX for 2.3
-        if (class_exists('TemplateHelper')) {
-            $activeFrontTemplate = TemplateHelper::getInstance()->getActiveFrontTemplate();
-        } else {
-            $activeFrontTemplate = (new TheliaTemplateHelper)->getActiveFrontTemplate();
-        }
-        
+        /** @var TheliaTemplateHelper $templateHelper */
+        $templateHelper = $this->container->get("thelia.template_helper");
+
+
         // Define the template that should be used
-        $parser->setTemplateDefinition($template ?: $activeFrontTemplate);
+        $parser->setTemplateDefinition($template ?: $templateHelper->getActiveFrontTemplate());
 
         return $parser;
     }
